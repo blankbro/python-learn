@@ -10,7 +10,6 @@ def singleton(cls):
     return get_instance
 
 
-@singleton
 class PluginManager:
     def __init__(self):
         self.plugins = {}
@@ -26,23 +25,16 @@ class PluginManager:
             plugin_cls.hidden = kwargs.get("hidden") if kwargs.get("hidden") != None else False
             plugin_cls.enabled = True
             self.plugins[name.upper()] = plugin_cls
+            return plugin_cls
 
         return wrapper
 
 
-instance = PluginManager()
+plugin_manager_cls = singleton(PluginManager)
+plugin_manager = plugin_manager_cls()
+plugin_manager_register = plugin_manager.register
 
-register = instance.register
 
-
-@register(
-    name="Hello",
-    desire_priority=100,
-    hidden=True,
-    desc="A simple plugin that says hello",
-    version="1.0",
-    author="lanvent",
-)
 class Hello:
 
     def __init__(self):
@@ -54,7 +46,12 @@ class Hello:
 
 if __name__ == "__main__":
     print("hello main")
-    hello = instance.plugins["HELLO"]()
 
-    # hello = Hello()
+    pmr = plugin_manager_register(name="Hello", desire_priority=100, hidden=True,
+                                  desc="A simple plugin that says hello", version="1.0", author="lanvent")
+
+    hello_cls = pmr(Hello)
+    hello = hello_cls()
     hello.test()
+
+    print(hello.priority)
